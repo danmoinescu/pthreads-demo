@@ -1,10 +1,14 @@
 #include "pthreads-demo.h"
 
+static void dispatcher_cleanup(void * arg);
+
 
 void* dispatcher(void *arg)
 {
     Dispatcher_arg *p_arg = (Dispatcher_arg*)arg;
     pthread_mutex_lock(p_arg->worker_recv_cond.mutex);
+    // Arrange for the mutex to be unlocked when we get cancelled
+    pthread_cleanup_push(dispatcher_cleanup, p_arg);
 
     // Signal the main thread that we're ready
     sem_post(p_arg->ready_sem);
@@ -37,6 +41,13 @@ void* dispatcher(void *arg)
     }
 
     // Purposefully not reached, so that the main thread can cancel us
-    pthread_mutex_unlock(p_arg->worker_recv_cond.mutex);
+    pthread_cleanup_pop(1); // needed to avoid a compilation error
     return NULL;
+}
+
+
+static void dispatcher_cleanup(void * arg)
+{
+    Dispatcher_arg *p_arg = (Dispatcher_arg*)arg;
+    pthread_mutex_unlock(p_arg->worker_recv_cond.mutex);
 }
