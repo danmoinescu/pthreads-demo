@@ -64,19 +64,21 @@ int main(int argc, const char* const argv[])
 
     for(int i=0; i<num_workers; ++i)
     {
-        // Fill in each worker's arguments
-        worker_args[i].id = i+1;
-        worker_args[i].work_units = work_unit_batch;
-        worker_args[i].available_work_units =
+        // Fill in each worker's arguments (overwrite const members)
+        *(int*)&worker_args[i].id = i+1;
+        *(Work**)&worker_args[i].work_units = work_unit_batch;
+        *(int**)&worker_args[i].available_work_units =
             &available_work_units;
-        worker_args[i].is_end_of_work = &is_end_of_work;
-        worker_args[i].results = results;
-        worker_args[i].result_prev_idx = &result_prev_idx;
-        worker_args[i].worker_send_mutex =
+        *(bool**)&worker_args[i].is_end_of_work = &is_end_of_work;
+        *(Result**)&worker_args[i].results = results;
+        *(int**)&worker_args[i].result_prev_idx = &result_prev_idx;
+        *(pthread_mutex_t**)&worker_args[i].worker_send_mutex =
             &worker_send_mutex;
 
-        worker_args[i].worker_recv_cond =
-            dispatcher_args.worker_recv_cond;
+        *(pthread_cond_t**)&worker_args[i].worker_recv_cond.cond =
+            dispatcher_args.worker_recv_cond.cond;
+        *(pthread_mutex_t**)&worker_args[i].worker_recv_cond.mutex =
+            dispatcher_args.worker_recv_cond.mutex;
 
         // Start the worker thread
         pthread_create(
