@@ -30,7 +30,7 @@ int main(int argc, const char* const argv[])
 
 #define WORK_UNIT_BATCH_SIZE 10
     Work work_unit_batch[WORK_UNIT_BATCH_SIZE]; // workers receive work here
-    int available_work_units = 0;
+    int work_stack_size = 0;
     bool is_end_of_work = false;
 
     //// Start the dispatcher thread
@@ -38,9 +38,9 @@ int main(int argc, const char* const argv[])
     sem_init(&dispatcher_ready_sem, 0, 0);
     Dispatcher_arg dispatcher_args = {
         .max_work_val = total_work_units,
-        .work_units = work_unit_batch,
-        .available_work_units = &available_work_units,
-        .max_available_work_units = WORK_UNIT_BATCH_SIZE,
+        .work_stack = work_unit_batch,
+        .work_stack_size = &work_stack_size,
+        .max_work_stack_size = WORK_UNIT_BATCH_SIZE,
         .is_end_of_work = &is_end_of_work,
         .worker_recv_cond = {
             .cond = &worker_recv_cond,
@@ -59,18 +59,18 @@ int main(int argc, const char* const argv[])
     //// Create the worker threads
     pthread_t worker_ids[num_workers];
     Worker_arg worker_args[num_workers];
-    Result results[total_work_units];
+    Result global_results[total_work_units];
     int result_prev_idx = -1;
 
     for(int i=0; i<num_workers; ++i)
     {
         // Fill in each worker's arguments (overwrite const members)
         *(int*)&worker_args[i].id = i+1;
-        *(Work**)&worker_args[i].work_units = work_unit_batch;
-        *(int**)&worker_args[i].available_work_units =
-            &available_work_units;
+        *(Work**)&worker_args[i].work_stack = work_unit_batch;
+        *(int**)&worker_args[i].work_stack_size =
+            &work_stack_size;
         *(bool**)&worker_args[i].is_end_of_work = &is_end_of_work;
-        *(Result**)&worker_args[i].results = results;
+        *(Result**)&worker_args[i].global_results = global_results;
         *(int**)&worker_args[i].result_prev_idx = &result_prev_idx;
         *(pthread_mutex_t**)&worker_args[i].worker_send_mutex =
             &worker_send_mutex;
@@ -97,7 +97,7 @@ int main(int argc, const char* const argv[])
     printf("Got %d result(s):", result_prev_idx+1);
     for(int i=0; i<=result_prev_idx; ++i)
     {
-        printf(" %d", results[i]);
+        printf(" %d", global_results[i]);
     }
     printf("\n");
     return 0;
