@@ -9,6 +9,9 @@ void* dispatcher(void *arg)
     // Signal the main thread that we're ready
     sem_post(p_arg->ready_sem);
 
+    /* Repeatedly wait for worker threads to sigal us that some work has
+       been performed, and replenish the work stack.
+    */
     Work prev_work_val = 0;
     while(true)
     {
@@ -19,10 +22,12 @@ void* dispatcher(void *arg)
         {
             if(prev_work_val >= p_arg->max_work_val)
             {
+                // all work is done
                 *p_arg->is_end_of_work = true;
                 break;
             }
 
+            // Place a new work unit in the LIFO work stack
             Work next_work_unit = ++prev_work_val;
             p_arg->work_units[(*p_arg->available_work_units)++] =
                 next_work_unit;
@@ -31,7 +36,7 @@ void* dispatcher(void *arg)
         signal_condition(&p_arg->worker_recv_cond);
     }
 
-    // Not reached
+    // Purposefully not reached, so that the main thread can cancel us
     pthread_mutex_unlock(p_arg->worker_recv_cond.mutex);
     return NULL;
 }
