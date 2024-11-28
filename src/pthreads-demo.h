@@ -5,9 +5,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include "work.h"
 
-typedef int Work; // could be any type of data (int[], struct etc)
 typedef int Result; // could be any type of data (int[], struct etc)
 
 
