@@ -58,11 +58,19 @@ static bool get_next_work_unit(
     pthread_mutex_lock(p_arg->worker_recv_cond.mutex);
     while(*p_arg->work_stack_size == 0 && !*p_arg->is_end_of_work)
     {
-        // Tell the dispatcher to make another piece of work available
+        /* Tell the dispatcher to make another piece of work available.
+           However, our signal could wake up another worker thread instead :-(
+        */
         signal_condition(&p_arg->worker_recv_cond);
         // Wait for the dispatcher to make another piece of work available
         wait_on_condition(&p_arg->worker_recv_cond);
         ++*p_misses;
+        /* Now we go back to the loop to check if the condition we've
+           been waiting for (work is available, or all work was completed)
+           has actually become true.
+           This is because we could've been woken up by another worker
+           thread who intended to signal the dispatcher.
+        */
     }
 
     bool success; // did we receive any work?

@@ -20,7 +20,9 @@ void* dispatcher(void *arg)
     while(true)
     {
         wait_on_condition(&p_arg->worker_recv_cond);
-        /* Fill in the work_stack array */
+        /* The worker_recv_cond.mutex is still locked.
+           Fill in the work_stack array.
+        */
         while(!*p_arg->is_end_of_work &&
               *p_arg->work_stack_size < p_arg->max_work_stack_size)
         {
