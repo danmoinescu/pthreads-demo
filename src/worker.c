@@ -56,7 +56,7 @@ static bool get_next_work_unit(
 {
     // Acquire a new piece of work
     pthread_mutex_lock(p_arg->worker_recv_cond.mutex);
-    while(*p_arg->available_work_units == 0 && !*p_arg->is_end_of_work)
+    while(*p_arg->work_stack_size == 0 && !*p_arg->is_end_of_work)
     {
         // Tell the dispatcher to make another piece of work available
         signal_condition(&p_arg->worker_recv_cond);
@@ -66,9 +66,10 @@ static bool get_next_work_unit(
     }
 
     bool success; // did we receive any work?
-    if(*p_arg->available_work_units > 0)
+    if(*p_arg->work_stack_size > 0)
     {
-        *p_work_unit = p_arg->work_units[--*p_arg->available_work_units];
+        // Get a unit work from the stack
+        *p_work_unit = p_arg->work_stack[--*p_arg->work_stack_size];
         // Tell the dispatcher to make another piece of work available
         signal_condition(&p_arg->worker_recv_cond);
         success = true;
@@ -88,7 +89,8 @@ static void send_local_results(
         pthread_mutex_lock(p_arg->worker_send_mutex);
         for(int i=0; i<how_many; ++i)
         {
-            p_arg->results[++(*p_arg->result_prev_idx)] = local_results[i];
+            p_arg->global_results[++(*p_arg->result_prev_idx)] =
+                local_results[i];
         }
         pthread_mutex_unlock(p_arg->worker_send_mutex);
 }

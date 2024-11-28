@@ -20,9 +20,9 @@ void* dispatcher(void *arg)
     while(true)
     {
         wait_on_condition(&p_arg->worker_recv_cond);
-        /* Fill in the work_units array */
+        /* Fill in the work_stack array */
         while(!*p_arg->is_end_of_work &&
-              *p_arg->available_work_units < p_arg->max_available_work_units)
+              *p_arg->work_stack_size < p_arg->max_work_stack_size)
         {
             if(prev_work_val >= p_arg->max_work_val)
             {
@@ -33,7 +33,7 @@ void* dispatcher(void *arg)
 
             // Place a new work unit in the LIFO work stack
             Work next_work_unit = ++prev_work_val;
-            p_arg->work_units[(*p_arg->available_work_units)++] =
+            p_arg->work_stack[(*p_arg->work_stack_size)++] =
                 next_work_unit;
         }
         // Notify any waiting workers that a new piece of work is available

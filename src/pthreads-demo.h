@@ -21,24 +21,24 @@ typedef struct
 typedef struct
 {
     const int id;
-    const Work * const work_units; // current work units
-    int * const available_work_units;
-    const bool * const is_end_of_work;
-    Result * const results;
-    int * const result_prev_idx;
-    Thread_condition worker_recv_cond;
-    pthread_mutex_t * const worker_send_mutex;
+    const Work * const work_stack; // work units available to workers
+    int * const work_stack_size;
+    const bool * const is_end_of_work; // set by dispatcher to signal the end of all work
+    Result * const global_results; // results from all workers
+    int * const result_prev_idx; // index in the global_results array
+    Thread_condition worker_recv_cond; // dispatcher-worker sync (acquiring work)
+    pthread_mutex_t * const worker_send_mutex; // worker sync (saving results)
 } Worker_arg;
 
 
 typedef struct
 {
-    const int max_work_val;
-    Work * const work_units; // current work units
-    int * const available_work_units;
-    const int max_available_work_units;
-    bool * const is_end_of_work;
-    Thread_condition worker_recv_cond;
+    const int max_work_val; // total amount of work units
+    Work * const work_stack; // work units available to workers
+    int * const work_stack_size;
+    const int max_work_stack_size;
+    bool * const is_end_of_work; // signals the end of all work
+    Thread_condition worker_recv_cond; // dispatcher-worker sync (acquiring work)
     sem_t * const ready_sem; // tell the main thread that we're ready
 } Dispatcher_arg;
 
