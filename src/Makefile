@@ -25,11 +25,12 @@ $(binary): $(objects)
 
 $(baseline_binary): $(baseline_objects)
 #	The following is applied automatically
-#	$(CC) -o $@ $?
+#	$(CC) -o $@ $? $(LDFLAGS)
 
 
 .c.o: $(headers)
-	$(CC) $(CFLAGS) -c $< -o $@
+#	The following is applied automatically
+#	$(CC) $(CFLAGS) -c $< -o $@
 
 
 clean:
