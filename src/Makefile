@@ -19,17 +19,17 @@ all: $(binary) $(baseline_binary)
 
 
 $(binary): $(objects)
-#	The following is applied automatically
+#	The following implicit rule is applied automatically
 #	$(CC) -o $@ $? $(LDFLAGS)
 
 
 $(baseline_binary): $(baseline_objects)
-#	The following is applied automatically
+#	The following implicit rule is applied automatically
 #	$(CC) -o $@ $? $(LDFLAGS)
 
 
-.c.o: $(headers)
-#	The following is applied automatically
+%.o : %.c $(headers)
+#	The following implicit rule is applied automatically
 #	$(CC) $(CFLAGS) -c $< -o $@
 
 
